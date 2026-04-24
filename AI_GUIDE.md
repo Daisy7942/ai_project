@@ -24,3 +24,4 @@
 - **CORS:** 모든 Origin/Method/Header 허용 (`*`).
 - **예외 처리:** 전체 로직을 `try-except`로 감싸고, 에러 발생 시 아래 JSON 반환.
 - 형식: `{"success": false, "message": "에러 내용"}`
+

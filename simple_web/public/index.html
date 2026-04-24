@@ -30,13 +30,13 @@
         h1 {
             text-align: center;
             color: #bb86fc;
+            margin-bottom: 25px;
         }
 
         .upload-section {
-            margin-top: 20px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
         }
 
         /* 이미지 미리보기 영역 */
@@ -61,11 +61,28 @@
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
         }
 
-        input[type="file"] {
+        label {
+            font-weight: bold;
             color: #999;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 15px;
+            background: #2c2c2c;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .model-selector label {
+            color: #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
 
         textarea {
@@ -75,7 +92,7 @@
             padding: 12px;
             border-radius: 6px;
             resize: none;
-            height: 100px;
+            height: 80px;
         }
 
         button {
@@ -89,14 +106,8 @@
             transition: 0.3s;
         }
 
-        button:hover {
-            background-color: #018786;
-        }
-
-        button:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
+        button:hover { background-color: #018786; }
+        button:disabled { background-color: #555; cursor: not-allowed; }
 
         /* 로딩 애니메이션 */
         .loading {
@@ -104,10 +115,15 @@
             margin: 20px 0;
             text-align: center;
             color: #03dac6;
-            font-style: italic;
+            animation: pulse 1.5s infinite;
+        }
+  /* 결과 표시 창 */
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
 
-        /* 결과 표시 창 */
         #resultArea {
             margin-top: 25px;
             padding: 20px;
@@ -116,6 +132,7 @@
             border-radius: 4px;
             display: none;
             white-space: pre-wrap;
+            line-height: 1.6;
         }
 
         .result-title {
@@ -137,13 +154,22 @@
             </div>
 
             <div class="input-group">
-                <label>이미지 선택</label>
+                <label>이미지 파일</label>
                 <input type="file" id="imageInput" accept="image/*">
             </div>
 
             <div class="input-group">
-                <label>질문 입력</label>
-                <textarea id="questionInput" placeholder="이미지에 대해 궁금한 점을 물어보세요..."></textarea>
+                <label>분석 모델 선택</label>
+                <div class="model-selector">
+                    <label><input type="radio" name="modelSelect" value="OLLAMA" checked> Ollama (일반)</label>
+                    <label><input type="radio" name="modelSelect" value="CHANDRA"> Chandra (OCR)</label>
+                    <label><input type="radio" name="modelSelect" value="GPT"> GPT-4o (고성능)</label>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>질문 및 요청사항</label>
+                <textarea id="questionInput" placeholder="예: 이 문서의 내용을 요약해줘 / 표 형식으로 추출해줘"></textarea>
             </div>
 
             <button id="analyzeBtn" onclick="requestAnalysis()">분석하기</button>
@@ -158,65 +184,63 @@
     </div>
 
     <script>
-        /**
-         * 이미지 선택 시 미리보기 표시
-         */
-        document.getElementById('imageInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const previewImg = document.getElementById('previewImg');
-            const placeholder = document.getElementById('placeholderText');
-
+        // 이미지 미리보기 기능
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewImg.src = e.target.result;
-                    previewImg.style.display = 'block';
-                    placeholder.style.display = 'none';
-                }
+                reader.onload = (event) => {
+                    const img = document.getElementById('previewImg');
+                    img.src = event.target.result;
+                    img.style.display = 'block';
+                    document.getElementById('placeholderText').style.display = 'none';
+                };
                 reader.readAsDataURL(file);
             }
         });
 
         /**
-         * Node.js 서버로 분석 요청 전송
+         * 분석 요청을 처리하는 함수입니다.
+         * 가이드에 따라 명확한 주석을 작성합니다.
          */
         async function requestAnalysis() {
             const imageInput = document.getElementById('imageInput');
             const questionInput = document.getElementById('questionInput');
-            const analyzeBtn = document.getElementById('analyzeBtn');
+            const model = document.querySelector('input[name="modelSelect"]:checked').value;
+            const btn = document.getElementById('analyzeBtn');
             const loading = document.getElementById('loading');
             const resultArea = document.getElementById('resultArea');
             const resultText = document.getElementById('resultText');
 
             if (!imageInput.files[0]) {
-                alert('이미지를 먼저 선택해주세요!');
+                alert('이미지를 선택해주세요.');
                 return;
             }
 
-            // UI 상태 업데이트: 버튼 비활성화 및 로딩 표시
-            analyzeBtn.disabled = true;
+            // UI 상태 제어
+            btn.disabled = true;
             loading.style.display = 'block';
             resultArea.style.display = 'none';
 
             const formData = new FormData();
             formData.append('image', imageInput.files[0]);
             formData.append('question', questionInput.value);
+            formData.append('model', model);
 
             try {
-                // Node.js 서버의 /analyze 엔드포인트 호출
-                const response = await axios.post('/analyze', formData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-
-                // 결과 출력
+                // Node.js 프록시 서버를 통해 FastAPI 호출
+                const response = await axios.post('/analyze', formData);
+                
                 resultArea.style.display = 'block';
-                resultText.innerText = JSON.stringify(response.data, null, 2);
+                if (response.data.success) {
+                    resultText.innerText = response.data.answer;
+                } else {
+                    resultText.innerText = "에러: " + response.data.message;
+                }
             } catch (error) {
-                console.error('Error:', error);
-                alert('분석 중 오류가 발생했습니다.');
+                alert('통신 오류가 발생했습니다.');
             } finally {
-                // UI 상태 복구
-                analyzeBtn.disabled = false;
+                btn.disabled = false;
                 loading.style.display = 'none';
             }
         }
