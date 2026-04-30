@@ -1,4 +1,4 @@
-# AI Multi-Model Image Analysis Server
+# AI 이미지 분석 웹 서비스
 
 FastAPI 기반의 이미지 분석 및 OCR 서버입니다.  
 사용자가 이미지를 업로드하고 질문을 입력하면, 선택한 AI 모델을 통해 분석 결과를 반환합니다.
@@ -6,8 +6,8 @@ FastAPI 기반의 이미지 분석 및 OCR 서버입니다.
 본 프로젝트는 하나의 API에서 다음 3가지 모델을 선택해 사용할 수 있도록 구현했습니다.
 
 - **OLLAMA**: 로컬 LLM 기반 이미지 분석
-- **GPT-4o**: OpenAI Vision API 기반 이미지 분석
 - **CHANDRA OCR**: HuggingFace 기반 OCR 및 문서 분석
+- **GPT-4o**: OpenAI Vision API 기반 이미지 분석
 
 분석 결과는 MySQL 데이터베이스에 저장되며, 간단한 웹 화면을 통해 이미지 업로드와 모델 선택이 가능합니다.
 
@@ -17,7 +17,7 @@ FastAPI 기반의 이미지 분석 및 OCR 서버입니다.
 
 - 이미지 파일 업로드
 - 질문 기반 이미지 분석
-- OLLAMA / GPT-4o / CHANDRA OCR 모델 선택
+- OLLAMA / CHANDRA OCR / GPT-4o 모델 선택
 - GPT-4o Vision API 연동
 - HuggingFace 기반 Chandra OCR 연동
 - MySQL 분석 결과 저장
@@ -41,8 +41,8 @@ FastAPI 기반의 이미지 분석 및 OCR 서버입니다.
 ### AI Model
 
 - Ollama
-- OpenAI GPT-4o
 - Chandra OCR
+- OpenAI GPT-4o
 - HuggingFace Transformers
 - PyTorch
 
@@ -60,7 +60,6 @@ FastAPI 기반의 이미지 분석 및 OCR 서버입니다.
 
 ```text
 AI_PROJECT/
-├── images/                 # 구현 캡쳐 이미지
 ├── app.py                  # FastAPI 서버 실행 및 모델 분기 처리
 ├── requirements.txt        # Python 패키지 목록
 ├── AI_GUIDE.md             # 프로젝트 개발 표준 가이드
@@ -68,6 +67,7 @@ AI_PROJECT/
 ├── .gitignore              # Git 제외 파일 설정
 │
 ├── dataset/                # 테스트 이미지 또는 분석용 데이터 폴더
+├── images/                 # README에 사용되는 구현 캡처 이미지 폴더
 │
 ├── src/
 │   ├── __init__.py         # src 패키지 인식용 파일
@@ -104,11 +104,13 @@ pip install -r requirements.txt
 프로젝트 루트에 `.env` 파일을 생성합니다.
 
 ```env
-OPENAI_API_KEY=your_openai_api_key
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=your_password
-DB_NAME=your_database_name
+OPENAI_API_KEY="your_openai_api_key"
+
+MYSQL_HOST="localhost"
+MYSQL_USER="your_mysql_user"
+MYSQL_PASSWORD="your_mysql_password"
+MYSQL_DATABASE="your_database_name"
+MYSQL_PORT="3307"
 ```
 
 `.env` 파일은 API Key와 DB 비밀번호가 포함되므로 GitHub에 업로드하지 않습니다.
@@ -166,8 +168,8 @@ http://localhost:3001
 | 값      | 설명                       
 |---------|---------------------------
 | OLLAMA  | 로컬 Ollama 모델 사용       
-| GPT     | OpenAI GPT-4o Vision 사용  
-| CHANDRA | Chandra OCR 사용           
+| CHANDRA | Chandra OCR 사용  
+| GPT     | OpenAI GPT-4o Vision 사용         
 
 ### Response 예시
 
@@ -192,6 +194,14 @@ http://localhost:3001
 이미지 + 질문 → Ollama 모델 → 분석 결과 반환
 ```
 
+### CHANDRA OCR
+
+HuggingFace 기반 Chandra OCR 모델을 사용하여 이미지 내 텍스트와 문서 구조를 분석합니다.
+
+```text
+이미지 파일 → PIL Image 변환 → Chandra OCR → OCR 결과 반환
+```
+
 ### GPT-4o
 
 이미지를 Base64로 변환한 뒤 OpenAI GPT-4o Vision API에 전달합니다.
@@ -201,14 +211,6 @@ http://localhost:3001
 ```
 
 PNG, JPG 등 이미지 타입 문제를 방지하기 위해 업로드된 파일의 실제 MIME 타입을 사용하도록 수정했습니다.
-
-### CHANDRA OCR
-
-HuggingFace 기반 Chandra OCR 모델을 사용하여 이미지 내 텍스트와 문서 구조를 분석합니다.
-
-```text
-이미지 파일 → PIL Image 변환 → Chandra OCR → OCR 결과 반환
-```
 
 ---
 
@@ -285,17 +287,17 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ### 5. Node.js 포트 충돌
 
-프론트엔드 서버 실행 시 3000번 포트가 이미 사용 중이라는 오류가 발생했습니다.
+3000번 포트가 이미 사용 중이라 프론트엔드 서버 실행 시 오류가 발생했습니다.
 
 ```text
 Error: listen EADDRINUSE: address already in use :::3000
 ```
 
-**해결**
+**해결**  
+포트 충돌을 피하기 위해 프론트엔드 서버 포트를 `3001`로 변경했습니다.
 
-```powershell
-netstat -ano | findstr :3000
-taskkill /PID 프로세스번호 /F
+```text
+http://localhost:3001
 ```
 
 ---
@@ -325,8 +327,6 @@ git rm -r --cached .venv
 | 5   | chore: .venv 폴더 제거                          | 가상환경 폴더 Git 추적 제외 
 
 ---
-## 실행 화면
-
 ## 실행 화면
 
 ### 1. Ollama 이미지 분석 화면
