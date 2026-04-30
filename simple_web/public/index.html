@@ -163,13 +163,13 @@
                 <div class="model-selector">
                     <label><input type="radio" name="modelSelect" value="OLLAMA" checked> Ollama (일반)</label>
                     <label><input type="radio" name="modelSelect" value="CHANDRA"> Chandra (OCR)</label>
-                    <label><input type="radio" name="modelSelect" value="GPT"> GPT-4o (고성능)</label>
+                    <label><input type="radio" name="modelSelect" value="GPT"> GPT-4o </label>
                 </div>
             </div>
 
             <div class="input-group">
                 <label>질문 및 요청사항</label>
-                <textarea id="questionInput" placeholder="예: 이 문서의 내용을 요약해줘 / 표 형식으로 추출해줘"></textarea>
+                <textarea id="questionInput" placeholder="예: 텍스트를 추출해서 설명해줘"></textarea>
             </div>
 
             <button id="analyzeBtn" onclick="requestAnalysis()">분석하기</button>
@@ -225,7 +225,7 @@
             const formData = new FormData();
             formData.append('image', imageInput.files[0]);
             formData.append('question', questionInput.value);
-            formData.append('model', model);
+            formData.append('modelSelect', model);
 
             try {
                 // Node.js 프록시 서버를 통해 FastAPI 호출

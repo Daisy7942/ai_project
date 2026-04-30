@@ -12,7 +12,7 @@ const FormData = require('form-data');
 const fs = require('fs');
 
 const app = express();
-const port = 3000;
+const port = 3001;
 
 // 모든 Origin 허용
 app.use(cors());
@@ -27,8 +27,9 @@ const upload = multer({ storage: storage });
  * FastAPI 서버로 분석 요청을 전달하는 프록시 함수
  * @param {Object} file - 업로드된 이미지 파일
  * @param {string} question - 사용자 질문
+ * @param {string} modelSelect - 선택된 모델 (OLLAMA, GPT, CHANDRA)
  */
-async function proxyToAnalyze(file, question) {
+async function proxyToAnalyze(file, question, modelSelect) {
     try {
         const formData = new FormData();
         formData.append('file', file.buffer, {
@@ -36,6 +37,7 @@ async function proxyToAnalyze(file, question) {
             contentType: file.mimetype,
         });
         formData.append('question', question);
+        formData.append('modelSelect', modelSelect);
 
         // FastAPI 서버(8000번 포트)로 데이터 전송
         const response = await axios.post('http://localhost:8000/analyze', formData, {
@@ -58,13 +60,14 @@ app.post('/analyze', upload.single('image'), async (req, res) => {
     try {
         const imageFile = req.file;
         const userQuestion = req.body.question;
+        const modelSelect = req.body.modelSelect;
 
         if (!imageFile) {
             return res.status(400).json({ success: false, message: '이미지 파일이 없습니다.' });
         }
 
         // FastAPI 서버에 분석 요청
-        const result = await proxyToAnalyze(imageFile, userQuestion);
+        const result = await proxyToAnalyze(imageFile, userQuestion, modelSelect);
         
         // 결과 반환
         res.json(result);
