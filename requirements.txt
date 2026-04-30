@@ -7,3 +7,7 @@ python-dotenv
 mysql-connector-python
 pillow
 nest-asyncio
+chandra-ocr[hf]
+torch
+transformers
+accelerate

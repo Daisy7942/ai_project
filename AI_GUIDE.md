@@ -9,11 +9,19 @@
 - **Stateless 구조:** API는 요청마다 독립적으로 처리하며, 데이터는 MySQL에 영구 저장.
 ## 3. 프로젝트 구조 (ai_project)
 /ai_project
-├── app.ipynb (FastAPI 실행)
+├── app.py (FastAPI 실행 및 모델 서빙 통합 진입점)
 ├── .env (GPT/Ollama 설정 및 API Key 관리)
+├── requirements.txt (의존성 패키지 목록)
 ├── database.py (MySQL 연동 및 쿼리 관리)
 ├── dataset/ (이미지 및 학습 데이터 저장소)
+├── src/
+│   └── database.py (실제 DB 로직)
 └── AI_GUIDE.md (현재 가이드 파일)
+
+## 4. 지원 모델
+- **OLLAMA:** 로컬 GPU 활용, `gemma4:e2b` 모델 기본 사용.
+- **CHANDRA:** OCR 전용 엔진, 텍스트 추출 및 문서 분석.
+- **GPT:** OpenAI `gpt-4o` 모델 활용, 고성능 비전 분석.
 ## 4. 코딩 스타일 (Strict)
 - **명명 규칙:** 변수명과 함수명은 `camelCase` 사용.
 - **반복문:** 리스트 컴프리헨션 사용 금지. 반드시 `for i in range(0, len(obj)):` 형식을 취할 것.
